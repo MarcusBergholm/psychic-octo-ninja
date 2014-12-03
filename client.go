@@ -14,7 +14,7 @@ import (
 // fetch to/from server.
 func main() {
 	// Dials the server.
-	conn, err := net.Dial("tcp", ":3333")
+	conn, err := net.Dial("tcp", ":4444")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,18 +38,14 @@ func send(conn net.Conn, reader *bufio.Reader) {
     input = input[:len(input)-1]
 	// Creates a new buffer based 	on input string.
 	buf := bytes.NewBufferString(input)
-	if buf.Len() == 10 || buf.Len() == 0 {
-		buf.Write(make([]byte, 1))
-	}
 	// Take the next 10 bytes and then sent it.
 	outputbuf := buf.Next(10)
 	// If outputbuf has less then 10 exit the loop
-	for len(outputbuf) == 10 || len(outputbuf) == 0  {
+	for len(outputbuf) == 10 {
 		conn.Write(outputbuf)
 		outputbuf = buf.Next(10)
 	}
-	if len(outputbuf) == 10 {
-		conn.Write(outputbuf)
+	if len(outputbuf) == 0 {
 		conn.Write(make([]byte, 1))
 	} else {
 		conn.Write(outputbuf)
@@ -66,10 +62,7 @@ func fetch(conn net.Conn) {
 		inputBuffer := make([]byte, 10)
 		inputLen, _ = conn.Read(inputBuffer)
 		// append the 10 bytes to the input string (return string) 
-		input = input + string(inputBuffer[:inputLen])
-		// If we encounter a newline (ASCII code for NL == 10)
-		// break the loop.  
-		//if inputBuffer[inputLen-1] == 10 {break}
+		input = input + string(inputBuffer[:inputLen])	
 	}
 	fmt.Println(input)
 }
