@@ -15,7 +15,7 @@ const (
     CONN_TYPE = "tcp"
     TEMP_MENU = "Welcome to Bank\n(1) Withdraw\n(2) Deposit\n(3) Balance\n(4) Change language\n(5) Log off"
     TEMP_MENU_SWE = "Välkommen till Bank\n(1) Uttag\n(2) Insättning\n(3) Saldo"
-    TEMP_LOGIN = "Welcome to Bank\nTo login enter your card nr:"
+    TEMP_LOGIN = "Welcome to Bank\nTo login enter your card nr: "
 )
 
 var accounts []users.User
@@ -58,9 +58,9 @@ func handleConnection(conn net.Conn) {
 		  }
 		  // Send a response back to connection
 		  switch s {
-		  case "1": withdraw(conn)
-		  case "2": deposit(conn)
-		  case "3": balance(conn)
+		  case "1": withdraw(conn, user)
+		  case "2": deposit(conn, user)
+		  case "3": balance(conn, user)
 		  case "4": changeLang(conn)
 		  case "5": logOff(user)
 		  			user = login(conn)
@@ -164,35 +164,31 @@ func logOff(user users.User) {
 	}
 }
 
-func withdraw(conn net.Conn) {
+func withdraw(conn net.Conn, user users.User) {
 	send(conn, "Enter the amount you wish to withdraw")
 	withdrawAmount, _ := fetch(conn)
-	_, _ := strconv.Atoi(withdrawAmount)
-	send(conn, "You succesfully took out: " + withdrawAmount + "\n " + TEMP_MENU)
+	withdrawAmountInt, _ := strconv.Atoi(withdrawAmount)
+	send(conn, "Please enter your two diget code to confirm your withdraw")
+	code, _ := fetch(conn)
+	codeInt, _ := strconv.Atoi(code)
+	if user.GetTwoDigitCode(codeInt) {
+		user.Withdraw(withdrawAmountInt)
+		send(conn, "You succesfully took out: " + withdrawAmount + "\n " + TEMP_MENU)
+	} else {
+		send(conn, "Wrong code\n" + TEMP_MENU)
+	}
 }
-func deposit(conn net.Conn) {
+func deposit(conn net.Conn, user users.User) {
 	send(conn, "Enter the amount you wish to deposit")
 	depositAmount, _ := fetch(conn)
-	fmt.Println(depositAmount)
+	depositAmountInt, _ := strconv.Atoi(depositAmount)
+	user.Deposit(depositAmountInt)
 	send(conn, "You succesfully entered: " + depositAmount + "\n" + TEMP_MENU)
 }
-func balance(conn net.Conn) {
-	send(conn, "You have no balance\n" + TEMP_MENU)
+func balance(conn net.Conn, user users.User) {
+	send(conn, "Your balance is: "+ strconv.Itoa(user.GetBalance()) +"\n" + TEMP_MENU)
 }
 func changeLang(conn net.Conn) {}
-
-
-
-
-
-
-		// if err != nil {
-		// 	fmt.Println("User disconnected") // Only prints in server.
-		//     return "", err
-		// }
-
-
-
 
 
 
